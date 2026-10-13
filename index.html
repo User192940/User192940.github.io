@@ -1,0 +1,570 @@
+<!doctype html>
+<!--
+  DESIGN RATIONALE: David Fedchuk, portfolio home
+  1. Palette, split-complementary on Munsell hue 7.5PB (indigo). The complement is 7.5Y, so the split legs are 7.5YR and 7.5GY;
+     we use the 7.5YR leg (saffron) and keep 7.5GY out. Ground = Paper #F0F1F7 (7.5PB 9.5/1), Ink #1D2140 (7.5PB 1.5/4),
+     Indigo #33408F (7.5PB 3/10), Saffron #E8922E (7.5YR 7/12, the highest chroma on the page, reserved for one CTA), Olive #7C7A26 (7.5Y 5/6, data marks only).
+  2. Munsell logic: value carries legibility (9.5 vs 1.5 = 8 steps); chroma carries attention (only saffron exceeds /10).
+     The 60-30-10 split is paper 60, ink and indigo 30, saffron plus olive 10. All text pairs pass WCAG AA (checked in the comments below).
+  3. Type: Jost (geometric sans, display) + Literata (humanist serif, body) + JetBrains Mono (data labels). Each role gets one face,
+     so similarity groups like with like (Gestalt). Major-third scale (1.25): 14.4 / 18 / 22.5 / 28.1 / 35.2 / 43.9 / 54.9 / 68.7 px.
+     Body line-height 1.55, display 1.05-1.15, measure capped at 66ch.
+  4. Grid: 8pt base; spacing steps are Fibonacci x 8 (8, 16, 24, 40, 64, 104). The hero splits 1.618fr : 1fr (golden ratio).
+  5. Friedman: tokens first, no framework, ~1 request for fonts, semantic landmarks, visible focus, reduced-motion respected,
+     progressive disclosure (the archive sits in <details>), and at most 5 nav items (Miller's 7+-2, kept low).
+  6. Ingels: the hero is the ground floor (name, thesis, one load-bearing CTA); the sticky nav is circulation; the dark case-study
+     slab is the structural core (figure-ground inversion); the live Mandelbrot canvas is the facade, rendered from Dave's own project.
+  7. Perception: von Restorff. Saffron appears exactly once as a fill (the CTA). Fitts: every control is at least 48px tall, and the CTA is the widest target in the hero.
+  8. Motion: entrances ease-out (cubic-bezier(.16,1,.3,1)), exits ease-in; two parallax layers max (content + canvas); all off under reduced motion.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>David Fedchuk</title>
+<meta name="description" content="David Fedchuk: AI implementation and software developer in Wisconsin. Builds model-checked AI pipelines in Python; IT Systems Specialist working in SQL and Snowflake.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: ground floor (golden-split hero) -> circulation (sticky nav) -> structural core (dark case-study slab) -> rooms (experience, projects, skills) -> exit (contact). */
+:root {
+  /* Color tokens. Contrast ratios (WCAG 2.x) measured against --paper unless noted. */
+  --paper:   #F0F1F7; /* 7.5PB 9.5/1, 60% ground */
+  --paper-2: #E3E5F0; /* 7.5PB 9/1.5, alternate ground for figure-ground between rooms */
+  --ink:     #1D2140; /* 7.5PB 1.5/4, body text, 13.9:1 */
+  --ink-2:   #4A4F6E; /* 7.5PB 3.5/3, secondary text, 7.1:1 (6.4:1 on paper-2) */
+  --indigo:  #33408F; /* 7.5PB 3/10, links and headings accent, 8.2:1 */
+  --saffron: #E8922E; /* 7.5YR 7/12, the CTA fill only; Ink on saffron is 6.4:1 */
+  --olive:   #7C7A26; /* 7.5Y 5/6, small data marks only (non-text, 4.0:1) */
+  --rule:    #C9CCDD;
+  --core-bg: #1D2140; /* the dark slab */
+  --core-fg: #E7E9F5; /* 12.9:1 on core-bg */
+  --core-2:  #A9AECB; /* 7.2:1 on core-bg */
+  --core-ac: #F0A24A; /* saffron for marks on the dark slab (non-text) */
+  --core-rule: #39406B;
+  --on-cta:  #1D2140;
+
+  --f-display: "Jost", "Futura", "Century Gothic", "Avenir Next", sans-serif;
+  --f-body: "Literata", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Major third (1.25) from an 18px body */
+  --t-1: 0.9rem;     /* 14.4 */
+  --t0: 1.125rem;    /* 18   */
+  --t1: 1.406rem;    /* 22.5 */
+  --t2: 1.758rem;    /* 28.1 */
+  --t3: 2.197rem;    /* 35.2 */
+  --t4: 2.747rem;    /* 43.9 */
+  --t5: 3.433rem;    /* 54.9 */
+  --t6: 4.292rem;    /* 68.7 */
+
+  /* 8pt grid, Fibonacci multiples */
+  --s1: 0.5rem; --s2: 1rem; --s3: 1.5rem; --s5: 2.5rem; --s8: 4rem; --s13: 6.5rem;
+
+  --measure: 66ch;
+  --wrap: 72rem;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.7, 0, .84, 0);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #14172B; --paper-2: #1A1E37; --ink: #E7E9F5; --ink-2: #A9AECB; --indigo: #A3AEF5;
+    --saffron: #F0A24A; --olive: #C2BF5A; --rule: #2E3358;
+    --core-bg: #0D0F1E; --core-fg: #E7E9F5; --core-2: #A9AECB; --core-ac: #F0A24A; --core-rule: #2A2F52;
+    --on-cta: #14172B; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #14172B; --paper-2: #1A1E37; --ink: #E7E9F5; --ink-2: #A9AECB; --indigo: #A3AEF5;
+  --saffron: #F0A24A; --olive: #C2BF5A; --rule: #2E3358;
+  --core-bg: #0D0F1E; --core-fg: #E7E9F5; --core-2: #A9AECB; --core-ac: #F0A24A; --core-rule: #2A2F52;
+  --on-cta: #14172B; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--t0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, canvas { max-width: 100%; display: block; }
+a { color: var(--indigo); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; line-height: 1.1; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; max-width: var(--measure); text-wrap: pretty; }
+.label {
+  font-family: var(--f-mono); font-size: var(--t-1); font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2);
+}
+.wrap { max-width: var(--wrap); margin-inline: auto; padding-inline: max(var(--s2), env(safe-area-inset-left, 0px)); }
+@media (min-width: 40rem) { .wrap { padding-inline: var(--s5); } }
+.skip { position: absolute; left: var(--s2); top: -4rem; background: var(--ink); color: var(--paper); padding: var(--s1) var(--s2); z-index: 10; }
+.skip:focus { top: var(--s2); }
+
+/* Circulation */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 3.5rem; }
+.mark { font-family: var(--f-display); font-weight: 600; font-size: var(--t0); color: var(--ink); text-decoration: none; letter-spacing: 0.02em; }
+.nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--s1); }
+.nav ul a {
+  display: inline-flex; align-items: center; min-height: 3rem; padding-inline: var(--s1);
+  font-family: var(--f-display); font-size: var(--t-1); color: var(--ink-2); text-decoration: none;
+}
+.nav ul a:hover { color: var(--ink); }
+@media (max-width: 30rem) { .nav ul li.opt { display: none; } }
+
+/* Ground floor */
+.hero { padding-block: var(--s8) var(--s13); overflow: hidden; }
+.hero .wrap { display: grid; gap: var(--s5); align-items: center; }
+@media (min-width: 56rem) { .hero .wrap { grid-template-columns: 1.618fr 1fr; gap: var(--s8); } }
+.hero-text { display: grid; gap: var(--s3); min-width: 0; }
+.hero h1 { font-size: clamp(var(--t5), 9vw, var(--t6)); font-weight: 600; line-height: 1.0; letter-spacing: -0.025em; }
+.hero h1 span { display: block; color: var(--indigo); font-weight: 400; }
+.thesis { font-size: var(--t1); line-height: 1.45; }
+.roles { display: flex; flex-wrap: wrap; gap: var(--s1); padding: 0; margin: 0; list-style: none; }
+.roles li {
+  font-family: var(--f-mono); font-size: var(--t-1); padding: 0.25rem 0.75rem;
+  border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-2);
+}
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); padding-top: var(--s1); }
+.cta {
+  display: inline-flex; align-items: center; gap: var(--s1); min-height: 3.5rem; padding-inline: var(--s5);
+  background: var(--saffron); color: var(--on-cta); font-family: var(--f-display); font-weight: 600; font-size: var(--t0);
+  text-decoration: none; border-radius: 0.25rem;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.cta:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1.5rem -0.5rem color-mix(in srgb, var(--saffron) 70%, transparent); text-decoration: none; }
+.cta:active { transform: translateY(0); transition-timing-function: var(--ease-in); }
+.quiet { font-family: var(--f-display); font-size: var(--t0); min-height: 3rem; display: inline-flex; align-items: center; }
+
+.facade { position: relative; margin: 0; min-width: 0; }
+.facade canvas {
+  width: 100%; aspect-ratio: 1 / 1.618; max-height: 34rem; object-fit: cover;
+  background: var(--paper-2); border-radius: 0.25rem; will-change: transform;
+}
+@media (max-width: 55.99rem) { .facade canvas { aspect-ratio: 1.618 / 1; } }
+.facade figcaption { margin-top: var(--s1); font-family: var(--f-mono); font-size: var(--t-1); color: var(--ink-2); }
+
+/* Rooms */
+section { padding-block: var(--s13); }
+.room-head { display: grid; gap: var(--s2); margin-bottom: var(--s8); }
+.room-head h2 { font-size: clamp(var(--t3), 5vw, var(--t4)); }
+.room-head p { color: var(--ink-2); }
+
+/* Structural core: dark slab (figure-ground inversion) */
+.core { background: var(--core-bg); color: var(--core-fg); }
+.core .label, .core .room-head p { color: var(--core-2); }
+.core a { color: var(--core-fg); }
+.core-grid { display: grid; gap: var(--s8); }
+/* Copy takes the golden major so its measure clears 45ch on desktop (it measured ~45 at 1fr). */
+@media (min-width: 56rem) { .core-grid { grid-template-columns: 1.618fr 1fr; align-items: start; } }
+.core-copy { display: grid; gap: var(--s3); min-width: 0; }
+.core-copy p { color: var(--core-fg); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: var(--s3); margin: 0; padding-top: var(--s2); border-top: 1px solid var(--core-rule); }
+.facts dt { font-family: var(--f-mono); font-size: var(--t-1); color: var(--core-2); letter-spacing: 0.04em; }
+.facts dd { margin: 0.25rem 0 0; font-family: var(--f-display); font-size: var(--t1); font-weight: 500; }
+
+.pipe { list-style: none; margin: 0; padding: 0; display: grid; counter-reset: stage; min-width: 0; }
+.pipe li { display: grid; grid-template-columns: 3rem 1fr; gap: var(--s2); padding-block: var(--s3); border-top: 1px solid var(--core-rule); counter-increment: stage; }
+.pipe li::before {
+  content: counter(stage, decimal-leading-zero); font-family: var(--f-mono); font-size: var(--t-1); color: var(--core-2); padding-top: 0.3rem;
+}
+.pipe h3 { font-size: var(--t1); font-weight: 500; }
+.pipe p { color: var(--core-2); font-size: var(--t0); margin-top: 0.25rem; }
+.gate {
+  display: inline-flex; align-items: center; gap: 0.5rem; margin-top: var(--s1);
+  font-family: var(--f-mono); font-size: var(--t-1); color: var(--core-fg);
+}
+.gate::before { content: ""; width: 0.6rem; height: 0.6rem; background: var(--core-ac); transform: rotate(45deg); }
+
+/* Projects */
+.work { background: var(--paper); }
+.projects { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.project {
+  display: grid; gap: var(--s2) var(--s5); padding-block: var(--s5); border-bottom: 1px solid var(--rule);
+}
+@media (min-width: 48rem) { .project { grid-template-columns: 1fr 1.618fr; } }
+.project h3 { font-size: var(--t2); }
+.project .meta { display: grid; gap: var(--s1); align-content: start; }
+.project .body { display: grid; gap: var(--s2); min-width: 0; }
+.stack { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; font-family: var(--f-mono); font-size: var(--t-1); color: var(--ink-2); }
+.stack li::before { content: ""; display: inline-block; width: 0.4rem; height: 0.4rem; margin-right: 0.5rem; background: var(--olive); border-radius: 50%; vertical-align: 0.15em; }
+.links { display: flex; flex-wrap: wrap; gap: var(--s3); font-family: var(--f-display); }
+.links a { min-height: 3rem; display: inline-flex; align-items: center; }
+.status { font-family: var(--f-mono); font-size: var(--t-1); color: var(--ink-2); }
+
+details.archive { margin-top: var(--s5); border: 1px solid var(--rule); border-radius: 0.25rem; }
+details.archive summary {
+  cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: var(--s2);
+  min-height: 3.5rem; padding-inline: var(--s3); font-family: var(--f-display); font-size: var(--t0); font-weight: 500;
+}
+details.archive summary::-webkit-details-marker { display: none; }
+details.archive summary::after { content: "+"; font-family: var(--f-mono); font-size: var(--t1); color: var(--indigo); transition: transform .25s var(--ease-out); }
+details.archive[open] summary::after { transform: rotate(45deg); }
+.archive ul { list-style: none; margin: 0; padding: 0 var(--s3) var(--s3); display: grid; gap: 0; }
+.archive li { display: grid; gap: 0.25rem var(--s3); padding-block: var(--s2); border-top: 1px solid var(--rule); }
+@media (min-width: 40rem) { .archive li { grid-template-columns: 14rem 1fr; } }
+.archive li a { font-family: var(--f-display); font-weight: 500; }
+.archive li span { color: var(--ink-2); font-size: var(--t0); min-width: 0; }
+
+/* Skills */
+.skills { background: var(--paper-2); }
+.skill-grid { display: grid; gap: var(--s5); }
+@media (min-width: 48rem) { .skill-grid { grid-template-columns: repeat(3, 1fr); } }
+.skill-col { display: grid; gap: var(--s2); align-content: start; min-width: 0; }
+.skill-col h3 { font-size: var(--t1); padding-bottom: var(--s1); border-bottom: 2px solid var(--indigo); }
+.skill-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.skill-col li { font-size: var(--t0); }
+.skill-col li small { display: block; font-family: var(--f-mono); font-size: var(--t-1); color: var(--ink-2); }
+
+/* Experience: same meta | body split as projects; one figure per job in the display face */
+.experience { background: var(--paper-2); }
+.jobs { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--rule); }
+.job { display: grid; gap: var(--s2) var(--s5); padding-block: var(--s5); border-bottom: 1px solid var(--rule); }
+@media (min-width: 48rem) { .job { grid-template-columns: 1fr 1.618fr; } }
+.job h3 { font-size: var(--t2); }
+.job .meta { display: grid; gap: var(--s1); align-content: start; }
+.job .body { display: grid; gap: var(--s2); min-width: 0; }
+.metric { display: grid; gap: 0.25rem; }
+.metric .num { font-family: var(--f-display); font-size: var(--t3); font-weight: 500; line-height: 1.1; color: var(--indigo); font-variant-numeric: tabular-nums; }
+.metric .what { color: var(--ink-2); }
+.job ul { margin: 0; padding-left: 1.1em; display: grid; gap: var(--s1); max-width: var(--measure); }
+.job li::marker { color: var(--olive); }
+.edu { margin-top: var(--s5); display: grid; gap: var(--s1); color: var(--ink-2); }
+
+/* Exit */
+.contact .wrap { display: grid; gap: var(--s5); }
+.contact h2 { font-size: clamp(var(--t4), 7vw, var(--t5)); max-width: 16ch; }
+.channels { display: grid; gap: 0; border-top: 1px solid var(--rule); max-width: 44rem; }
+.channel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s1) var(--s3); padding-block: var(--s2); border-bottom: 1px solid var(--rule); }
+.channel .v { font-family: var(--f-mono); font-size: var(--t0); overflow-wrap: anywhere; min-width: 0; user-select: all; }
+.btn {
+  min-height: 3rem; padding-inline: var(--s3); border: 1.5px solid var(--indigo); background: transparent; color: var(--indigo);
+  font-family: var(--f-display); font-size: var(--t-1); font-weight: 500; border-radius: 0.25rem; cursor: pointer;
+  display: inline-flex; align-items: center; text-decoration: none;
+}
+.btn:hover { background: color-mix(in srgb, var(--indigo) 10%, transparent); }
+footer { padding-block: var(--s5); border-top: 1px solid var(--rule); color: var(--ink-2); font-size: var(--t-1); font-family: var(--f-mono); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s2); }
+
+/* Motion: entrances ease-out from a visible resting state */
+@keyframes rise { from { transform: translateY(0.75rem); opacity: .001; } to { transform: none; opacity: 1; } }
+.hero-text > * { animation: rise .8s var(--ease-out) both; }
+.hero-text > *:nth-child(2) { animation-delay: .06s; }
+.hero-text > *:nth-child(3) { animation-delay: .12s; }
+.hero-text > *:nth-child(4) { animation-delay: .18s; }
+.hero-text > *:nth-child(5) { animation-delay: .24s; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .facade canvas { transform: none !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <nav class="wrap" aria-label="Primary">
+    <a class="mark" href="#top">David Fedchuk</a>
+    <ul>
+      <li><a href="#pipeline">AI pipeline</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li class="opt"><a href="#work">Work</a></li>
+      <li class="opt"><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+  <!-- Ground floor -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero-text">
+        <p class="label">Wisconsin &middot; B.S. Computer Science, WGU</p>
+        <h1 id="hero-title">David Fedchuk<span>builds software that puts AI to work.</span></h1>
+        <p class="thesis">I build Python pipelines that call language models, check their output with a second model, and hand the result to a person for approval. By day I'm an IT Systems Specialist, tuning the SQL that a shipping floor runs on.</p>
+        <ul class="roles" aria-label="Roles I'm applying for">
+          <li>AI implementation</li><li>Software development</li><li>Data</li>
+        </ul>
+        <div class="actions">
+          <a class="cta" href="#contact">Get in touch</a>
+          <a class="quiet" href="#pipeline">See how the AI pipeline works</a>
+        </div>
+      </div>
+      <figure class="facade">
+        <canvas id="mandel" width="480" height="776" role="img" aria-label="The Mandelbrot set, rendered in the page colors"></canvas>
+        <figcaption>z &rarr; z&sup2; + c &middot; drawn live in your browser, after my Java Mandelbrot project</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Structural core: approved by Dave for public, 2026-10-12. -->
+  <section class="core" id="pipeline" aria-labelledby="pipe-title">
+    <div class="wrap">
+      <div class="core-grid">
+        <div class="core-copy">
+          <p class="label">Case study &middot; AI implementation</p>
+          <h2 id="pipe-title" style="font-size: clamp(var(--t3), 5vw, var(--t4));">An automated video studio with a model checking every step</h2>
+          <p>ReplayForge is my <a href="https://www.youtube.com/@HowdWeKnow">YouTube channel</a> that explains what is really behind AI headlines. I built the pipeline that produces it. It researches a topic, writes and fact-checks a script, records the narration, animates the visuals and packages a long video plus a vertical Short.</p>
+          <p>The hard part is trust. A second model from a different provider reviews each stage. If a stage still fails after three rounds, it stops and goes to a person, with the open issues listed. Nothing is published without a human.</p>
+          <dl class="facts">
+            <div><dt>Language</dt><dd>Python</dd></div>
+            <div><dt>Review rounds per gate</dt><dd>3 max</dd></div>
+            <div><dt>Output formats</dt><dd>16:9 and 9:16</dd></div>
+          </dl>
+        </div>
+        <ol class="pipe" aria-label="Pipeline stages">
+          <li><div><h3>Research and script</h3><p>Pick or take a topic, gather sources, write the script and a beat list for the visuals.</p><span class="gate">verifier gate: fact-check</span></div></li>
+          <li><div><h3>Narration</h3><p>Text-to-speech with written pacing markup, then automatic checks for clipped or garbled takes.</p><span class="gate">verifier gate: audio</span></div></li>
+          <li><div><h3>Visuals</h3><p>Manim animations timed to the narration, rendered in landscape and vertical.</p><span class="gate">verifier gate: video frames</span></div></li>
+          <li><div><h3>Package</h3><p>Mix, thumbnail and metadata go to a small approval web app I wrote.</p></div></li>
+          <li><div><h3>Human release</h3><p>A person reviews, uploads and schedules. Scheduled jobs and a monitoring service keep the server healthy.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rooms -->
+  <section class="experience" id="experience" aria-labelledby="exp-title">
+    <div class="wrap">
+      <div class="room-head">
+        <p class="label">Experience</p>
+        <h2 id="exp-title">Where the work has been</h2>
+      </div>
+      <ol class="jobs">
+        <li class="job">
+          <div class="meta"><h3>IT Systems Specialist</h3><span class="status">DSV &middot; New Berlin, WI<br>Feb 2026 &ndash; present</span></div>
+          <div class="body">
+            <p class="metric"><span class="num">430s &rarr; 55s</span> <span class="what">runtime of a core reporting query after I refactored it (87% faster)</span></p>
+            <ul>
+              <li>Write the daily production SQL the shipping department uses to track metrics and prioritise high-volume orders.</li>
+              <li>Pull, clean and visualise warehouse fulfilment data from Snowflake with SQL and Python (Snowpark).</li>
+              <li>Built Excel VBA macros that automate report layouts and save hours of manual entry each week.</li>
+              <li>Fix reference and mapping errors between the WMS and ERP before they turn into inventory holds.</li>
+              <li>Taking over reporting workflows and ERP interface upkeep from the departing Business Analyst.</li>
+            </ul>
+          </div>
+        </li>
+        <li class="job">
+          <div class="meta"><h3>Shipping / Receiving Specialist</h3><span class="status">MCL Fabrication &middot; Pulaski, WI<br>Jun 2024 &ndash; Nov 2024</span></div>
+          <div class="body">
+            <p class="metric"><span class="num">+400%</span> <span class="what">labelling efficiency after I automated the shipping-label process</span></p>
+            <ul>
+              <li>Built Excel tools for inventory tracking and order picking; tracked parts in the ERP.</li>
+            </ul>
+          </div>
+        </li>
+        <li class="job">
+          <div class="meta"><h3>Frontend Developer (volunteer)</h3><span class="status">Dev Launchers &middot; remote<br>2023</span></div>
+          <div class="body">
+            <ul>
+              <li>Built settings pages in React, TypeScript and Tailwind CSS for the main site.</li>
+              <li>Wrote a tool that generates SVG assets automatically for the design pipeline.</li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+      <p class="edu"><span class="label">Education</span> B.S. Computer Science, Western Governors University &middot; A.A.S. Software Development and A.A.S. Web Development, Northeast Wisconsin Technical College</p>
+    </div>
+  </section>
+
+  <section class="work" id="work" aria-labelledby="work-title">
+    <div class="wrap">
+      <div class="room-head">
+        <p class="label">Selected work</p>
+        <h2 id="work-title">Things I've shipped</h2>
+      </div>
+      <div class="projects">
+        <article class="project">
+          <div class="meta"><h3>Netclips</h3><span class="status">Web app &middot; complete</span></div>
+          <div class="body">
+            <p>A streaming-site clone for browsing movies and watching their trailers, with sign-in and a responsive player layout. It covers authentication, a hosted database and a React front end talking to a Node back end.</p>
+            <ul class="stack"><li>React</li><li>Node.js</li><li>Tailwind</li><li>Firebase</li></ul>
+            <div class="links"><a href="https://github.com/User192940/Netclips">Source on GitHub</a></div>
+          </div>
+        </article>
+        <article class="project">
+          <div class="meta"><h3>Silvalux Store</h3><span class="status">E-commerce &middot; live</span></div>
+          <div class="body">
+            <p>A Shopify storefront set up and tuned for search: product structure, page metadata and on-page SEO.</p>
+            <ul class="stack"><li>Shopify</li><li>SEO</li></ul>
+            <div class="links"><a href="https://silvalux.myshopify.com/">Visit the store</a></div>
+          </div>
+        </article>
+        <article class="project">
+          <div class="meta"><h3>American Eagle replica</h3><span class="status">Front end &middot; in progress</span></div>
+          <div class="body">
+            <p>A component-by-component rebuild of a large retail site, as practice in matching a production design system.</p>
+            <ul class="stack"><li>React</li><li>Tailwind</li></ul>
+            <div class="links"><a href="https://github.com/User192940/american-eagle-website">Source on GitHub</a></div>
+          </div>
+        </article>
+        <article class="project">
+          <div class="meta"><h3>NWTC college site</h3><span class="status">WordPress &middot; coursework</span></div>
+          <div class="body">
+            <p>A WordPress site built and managed for a web management course, including plugin selection and configuration.</p>
+            <ul class="stack"><li>WordPress</li><li>Plugins</li></ul>
+            <div class="links"><a href="https://dfedchuk.bitweb1.nwtc.edu/webmgmt/">Visit the site</a></div>
+          </div>
+        </article>
+      </div>
+
+      <details class="archive">
+        <summary>More from the archive</summary>
+        <ul>
+          <li><a href="https://github.com/User192940/Mandelbrot">Mandelbrot</a><span>Java renderer for the Mandelbrot set. The image at the top of this page uses the same math.</span></li>
+          <li><a href="https://github.com/User192940/C-Sharp">C# projects</a><span>Console and desktop exercises in C#.</span></li>
+          <li><a href="https://github.com/User192940/NodeJS">Node.js work</a><span>Step-by-step builds covering modules, events, servers and routing.</span></li>
+          <li><a href="https://github.com/User192940/portfolio">NWTC coursework</a><span>The full class archive: JavaScript, PHP, web graphic design and front-end development.</span></li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <section class="skills" id="skills" aria-labelledby="skills-title">
+    <div class="wrap">
+      <div class="room-head">
+        <p class="label">Toolbox</p>
+        <h2 id="skills-title">What I work with</h2>
+      </div>
+      <div class="skill-grid">
+        <div class="skill-col">
+          <h3>AI implementation</h3>
+          <ul>
+            <li>LLM APIs<small>DeepSeek, Gemini via OpenRouter</small></li>
+            <li>Model-checks-model review loops<small>rubrics, round limits, escalation to a human</small></li>
+            <li>Text-to-speech<small>Google Cloud TTS, pacing markup</small></li>
+          </ul>
+        </div>
+        <div class="skill-col">
+          <h3>Development</h3>
+          <ul>
+            <li>Python<small>pipelines, small web apps</small></li>
+            <li>JavaScript, TypeScript, React<small>Node.js, Tailwind, Firebase</small></li>
+            <li>C# and ASP.NET, PHP, Java<small>coursework and side projects</small></li>
+          </ul>
+        </div>
+        <div class="skill-col">
+          <h3>Data and systems</h3>
+          <ul>
+            <li>SQL and query tuning<small>production reporting, SQL Server</small></li>
+            <li>Snowflake<small>Python (Snowpark)</small></li>
+            <li>Excel and VBA<small>macros, report automation</small></li>
+            <li>ERP / WMS<small>Blue Yonder, Epicor</small></li>
+            <li>Linux servers<small>systemd timers, monitoring, git</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Exit -->
+  <section class="contact" id="contact" aria-labelledby="contact-title">
+    <div class="wrap">
+      <p class="label">Contact</p>
+      <h2 id="contact-title">Hiring for AI, development or data work? Let's talk.</h2>
+      <div class="channels">
+        <div class="channel">
+          <span class="v" id="email">davfedchuk@gmail.com</span>
+          <button class="btn" type="button" id="copy-email" aria-describedby="email">Copy email</button>
+        </div>
+        <div class="channel">
+          <span class="v">LinkedIn</span>
+          <a class="btn" href="https://www.linkedin.com/in/david-fedchuk-673689239/">Open profile</a>
+        </div>
+        <div class="channel">
+          <span class="v">GitHub</span>
+          <a class="btn" href="https://github.com/User192940">See repositories</a>
+        </div>
+      </div>
+      <p class="status" id="copy-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="yr">2026</span> David Fedchuk</span>
+    <span>Hand-built in HTML, CSS and a little JavaScript. No framework.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Copy email (clipboard can be refused; fall back to selecting the text)
+  const btn = document.getElementById('copy-email'), status = document.getElementById('copy-status'), email = document.getElementById('email');
+  btn.addEventListener('click', () => {
+    const done = () => { status.textContent = 'Email address copied.'; };
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents(email);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      status.textContent = 'Address selected. Press Ctrl+C or Cmd+C to copy.';
+    };
+    try { navigator.clipboard.writeText(email.textContent.trim()).then(done, fallback); } catch (e) { fallback(); }
+  });
+
+  // Facade: Mandelbrot set, colored from the theme tokens (paper -> indigo -> saffron)
+  const cv = document.getElementById('mandel'), ctx = cv.getContext('2d');
+  const hex = n => { const v = getComputedStyle(document.documentElement).getPropertyValue(n).trim().replace('#', '');
+    return [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16)); };
+  const mix = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
+  function draw() {
+    const W = cv.width, H = cv.height, img = ctx.createImageData(W, H), d = img.data;
+    const bg = hex('--paper-2'), mid = hex('--indigo'), hot = hex('--saffron'), core = hex('--core-bg');
+    const portrait = H > W, MAX = 140;
+    // Portrait canvas: rotate the set so the real axis runs vertically
+    const span = 3.1 / Math.max(W, H);
+    for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+      let u = (px - W / 2) * span, v = (py - H / 2) * span;
+      const cr = (portrait ? -v : u) - 0.62, ci = portrait ? u : v;
+      let x = 0, y = 0, k = 0, x2 = 0, y2 = 0;
+      while (x2 + y2 <= 16 && k < MAX) { y = 2 * x * y + ci; x = x2 - y2 + cr; x2 = x * x; y2 = y * y; k++; }
+      let c;
+      if (k >= MAX) c = core;
+      else {
+        const s = (k + 1 - Math.log2(Math.log2(x2 + y2) / 2)) / MAX, t = Math.pow(Math.min(1, s * 3.2), 0.6);
+        c = t < 0.7 ? mix(bg, mid, t / 0.7) : mix(mid, hot, (t - 0.7) / 0.3);
+      }
+      const o = (py * W + px) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function size() {
+    const narrow = !matchMedia('(min-width: 56rem)').matches;
+    const w = narrow ? 776 : 480, h = narrow ? 480 : 776;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; draw(); }
+  }
+  size(); draw();
+  addEventListener('resize', size);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // Parallax: layer 2 (the canvas) drifts slower than layer 1 (content). Two layers total.
+  let ticking = false;
+  addEventListener('scroll', () => {
+    if (reduce.matches || ticking) return; ticking = true;
+    requestAnimationFrame(() => { const y = Math.min(scrollY, 900); cv.style.transform = `translateY(${y * 0.08}px)`; ticking = false; });
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
