@@ -190,6 +190,11 @@ section { padding-block: var(--s13); }
   font-family: var(--f-mono); font-size: var(--t-1); color: var(--core-fg);
 }
 .gate::before { content: ""; width: 0.6rem; height: 0.6rem; background: var(--core-ac); transform: rotate(45deg); }
+.core-notes { display: grid; gap: var(--s5); margin-top: var(--s8); padding-top: var(--s5); border-top: 1px solid var(--core-rule); }
+@media (min-width: 56rem) { .core-notes { grid-template-columns: repeat(3, 1fr); gap: var(--s5); } }
+.core-notes h3 { font-size: var(--t1); font-weight: 500; }
+.core-notes ul { margin: var(--s2) 0 0; padding-left: 1.1rem; display: grid; gap: var(--s1); }
+.core-notes li { color: var(--core-2); font-size: var(--t0); }
 
 /* Projects */
 .work { background: var(--paper); }
@@ -314,28 +319,58 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     </div>
   </section>
 
-  <!-- Structural core: approved by Dave for public, 2026-10-12. -->
+  <!-- Structural core: approved by Dave for public, 2026-10-12. v2 (agents + gate case study), numbers as of 2026-10-18. -->
   <section class="core" id="pipeline" aria-labelledby="pipe-title">
     <div class="wrap">
       <div class="core-grid">
         <div class="core-copy">
           <p class="label">Case study &middot; AI implementation</p>
-          <h2 id="pipe-title" style="font-size: clamp(var(--t3), 5vw, var(--t4));">An automated video studio with a model checking every step</h2>
-          <p>ReplayForge is my <a href="https://www.youtube.com/@HowdWeKnow">YouTube channel</a> that explains what is really behind AI headlines. I built the pipeline that produces it. It researches a topic, writes and fact-checks a script, records the narration, animates the visuals and packages a long video plus a vertical Short.</p>
-          <p>The hard part is trust. A second model from a different provider reviews each stage. If a stage still fails after three rounds, it stops and goes to a person, with the open issues listed. Nothing is published without a human.</p>
+          <h2 id="pipe-title" style="font-size: clamp(var(--t3), 5vw, var(--t4));">Agents make the videos. I approve what ships.</h2>
+          <p>ReplayForge is my <a href="https://www.youtube.com/@HowdWeKnow">YouTube channel</a> that explains what is really behind AI headlines. I wanted AI agents to make it without me babysitting each step, and without an agent ever publishing something I hadn't seen.</p>
+          <p>Agents are fast but confidently wrong, and a model grading its own work tends to pass it. So the design question was trust: where agents act alone, where a model from a different provider checks them, and where a person decides. Claude Code sessions wrote most of the code on branches; I set the rules, and I review and merge every pull request.</p>
           <dl class="facts">
-            <div><dt>Language</dt><dd>Python</dd></div>
             <div><dt>Review rounds per gate</dt><dd>3 max</dd></div>
-            <div><dt>Output formats</dt><dd>16:9 and 9:16</dd></div>
+            <div><dt>Verifier cost per package</dt><dd>$0.24&ndash;$0.99</dd></div>
+            <div><dt>Tests passing</dt><dd>106</dd></div>
           </dl>
         </div>
         <ol class="pipe" aria-label="Pipeline stages">
-          <li><div><h3>Research and script</h3><p>Pick or take a topic, gather sources, write the script and a beat list for the visuals.</p><span class="gate">verifier gate: fact-check</span></div></li>
-          <li><div><h3>Narration</h3><p>Text-to-speech with written pacing markup, then automatic checks for clipped or garbled takes.</p><span class="gate">verifier gate: audio</span></div></li>
-          <li><div><h3>Visuals</h3><p>Manim animations timed to the narration, rendered in landscape and vertical.</p><span class="gate">verifier gate: video frames</span></div></li>
-          <li><div><h3>Package</h3><p>Mix, thumbnail and metadata go to a small approval web app I wrote.</p></div></li>
-          <li><div><h3>Human release</h3><p>A person reviews, uploads and schedules. Scheduled jobs and a monitoring service keep the server healthy.</p></div></li>
+          <li><div><h3>Always-on agents</h3><p>Long-running Claude Code sessions restart on their own if they drop. I hand them work from my phone.</p></div></li>
+          <li><div><h3>Make and check</h3><p>The agent researches, scripts, voices (Gemini TTS) and animates (Manim) a long video plus a vertical Short. DeepSeek grades the text and Gemini the audio and frames, blind, against a rubric.</p><span class="gate">3 rounds, then it comes to me</span></div></li>
+          <li><div><h3>One approval point</h3><p>A small web app I review in. On approval it stores a SHA-256 fingerprint of the exact files I saw, and the upload page sends only those bytes.</p><span class="gate">human gate</span></div></li>
+          <li><div><h3>Fenced autopilot</h3><p>Scheduled agents run as a separate Unix user that can't read credentials or press approve. Paid steps go through a wrapper that logs each call and stops at a dollar budget.</p></div></li>
+          <li><div><h3>Ops</h3><p>A monitor scans connections, logins and agent commands every 5 minutes. A nightly backup runs a secret scan before anything leaves the server.</p></div></li>
         </ol>
+      </div>
+      <div class="core-notes">
+        <div>
+          <h3>Results</h3>
+          <ul>
+            <li>4 video packages through the gate, 7 uploads (Oct 7&ndash;17), all now viewable on YouTube.</li>
+            <li>Outside-verifier spend about $0.24&ndash;$0.99 per package ($2.84 across 5 runs, one a format sample). Voice and the Claude subscription are not included.</li>
+            <li>14 approval decisions logged with my active review time, for example 106&nbsp;s to 579&nbsp;s per video.</li>
+            <li>Monitoring ran 287 of 287 scans in 24 hours.</li>
+            <li>Channel: 6,664 to 7,618 views and 12 to 13 subscribers in 10 days. Most views still come from older videos.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What I decided</h3>
+          <ul>
+            <li>Agents prepare; only I publish.</li>
+            <li>One approval point, bound to the exact files.</li>
+            <li>Three review rounds, then a person.</li>
+            <li>Agents get their own Unix user; only I change spend caps.</li>
+            <li>Every new format starts with a sample I approve.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Lessons</h3>
+          <ul>
+            <li>A second model catches real problems and invents some. In one run 7 of the judge's 13 must-fixes were real; 6 weren't in the frames or audio. Agents now check each one against the media first.</li>
+            <li>Permission rules are guardrails, not walls. A rule blocked reading a credential file, but not a script handed its path. That is why scheduled agents run as a separate OS user.</li>
+            <li>Small trust bugs matter: a forwarded-IP header trusted from localhost, a hash cache keyed on file time. Both fixed.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
